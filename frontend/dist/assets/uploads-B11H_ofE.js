@@ -1,0 +1,1 @@
+import{h as o}from"./_plugin-vue_export-helper-boiryBmO.js";function p(t){const a=new FormData;return a.append("file",t),o.post("/uploads/image",a,{headers:{"Content-Type":"multipart/form-data"}})}export{p as u};
