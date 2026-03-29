@@ -1,1 +1,0 @@
-import{h as t}from"./_plugin-vue_export-helper-boiryBmO.js";function a(s){return t.post("/messages/conversations/start",{goodsId:s})}function o(s){return t.get("/messages/conversations",{params:s})}function r(s,e){return t.get(`/messages/conversations/${s}/items`,{params:e})}function i(s){return t.post("/messages/items",s)}export{i as a,o as b,r as l,a as s};
