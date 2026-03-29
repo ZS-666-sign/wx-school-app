@@ -1,7 +1,7 @@
 package com.campustrade.platform.goods.service;
 
 import com.campustrade.platform.category.dataobject.CategoryDO;
-import com.campustrade.platform.category.mapper.CategoryMapper;
+import com.campustrade.platform.category.service.CategoryService;
 import com.campustrade.platform.common.AppException;
 import com.campustrade.platform.common.PageResponse;
 import com.campustrade.platform.goods.assembler.GoodsAssembler;
@@ -11,8 +11,9 @@ import com.campustrade.platform.goods.dto.request.GoodsSaveRequestDTO;
 import com.campustrade.platform.goods.dto.response.GoodsResponseDTO;
 import com.campustrade.platform.goods.enums.GoodsStatusEnum;
 import com.campustrade.platform.goods.mapper.GoodsMapper;
+import com.campustrade.platform.message.mapper.ConversationMapper;
 import com.campustrade.platform.user.dataobject.UserDO;
-import com.campustrade.platform.user.mapper.UserMapper;
+import com.campustrade.platform.user.service.UserService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -29,27 +30,30 @@ import java.util.Map;
 public class GoodsService {
 
     private final GoodsMapper goodsMapper;
-    private final CategoryMapper categoryMapper;
-    private final UserMapper userMapper;
+    private final CategoryService categoryService;
+    private final UserService userService;
+    private final ConversationMapper conversationMapper;
     private final GoodsAssembler goodsAssembler;
 
     public GoodsService(GoodsMapper goodsMapper,
-                        CategoryMapper categoryMapper,
-                        UserMapper userMapper,
+                        CategoryService categoryService,
+                        UserService userService,
+                        ConversationMapper conversationMapper,
                         GoodsAssembler goodsAssembler) {
         this.goodsMapper = goodsMapper;
-        this.categoryMapper = categoryMapper;
-        this.userMapper = userMapper;
+        this.categoryService = categoryService;
+        this.userService = userService;
+        this.conversationMapper = conversationMapper;
         this.goodsAssembler = goodsAssembler;
     }
 
-    @Transactional
+@Transactional
     @CacheEvict(cacheNames = "goods:list", allEntries = true)
     public GoodsResponseDTO create(Long sellerId, GoodsSaveRequestDTO request) {
-        UserDO seller = getUserOrThrow(sellerId);
+        userService.getById(sellerId);
 
         GoodsDO goods = new GoodsDO();
-        goods.setSellerId(seller.getId());
+        goods.setSellerId(sellerId);
         goods.setCategoryId(validateCategoryId(request.categoryId()));
         goods.setTitle(request.title().trim());
         goods.setDescription(request.description().trim());
@@ -88,6 +92,7 @@ public class GoodsService {
     public void delete(Long currentUserId, Long goodsId) {
         GoodsDO goods = getGoodsOrThrow(goodsId);
         validateOwner(currentUserId, goods);
+        conversationMapper.deleteByGoodsId(goodsId);
         goodsMapper.deleteById(goodsId);
     }
 
@@ -100,7 +105,7 @@ public class GoodsService {
         return getDetail(goodsId);
     }
 
-    @Transactional(readOnly = true)
+@Transactional(readOnly = true)
     public GoodsResponseDTO getDetail(Long goodsId) {
         GoodsDO goods = getGoodsOrThrow(goodsId);
         goods.setImages(goodsMapper.findImagesByGoodsId(goodsId));
@@ -108,7 +113,11 @@ public class GoodsService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "goods:list", key = "#keyword + ':' + #categoryId + ':' + #status + ':' + #page + ':' + #size")
+    public GoodsDO getById(Long goodsId) {
+        return getGoodsOrThrow(goodsId);
+    }
+
+@Transactional(readOnly = true)
     public PageResponse<GoodsResponseDTO> list(String keyword, Long categoryId, GoodsStatusEnum status, int page, int size) {
         int offset = page * size;
         String normalizedKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
@@ -121,9 +130,9 @@ public class GoodsService {
         return PageResponse.of(items, total, page, size);
     }
 
-    @Transactional(readOnly = true)
+@Transactional(readOnly = true)
     public PageResponse<GoodsResponseDTO> myGoods(Long sellerId, int page, int size) {
-        getUserOrThrow(sellerId);
+        userService.getById(sellerId);
 
         int offset = page * size;
         List<GoodsDO> goodsList = goodsMapper.findBySellerId(sellerId, size, offset);
@@ -142,22 +151,11 @@ public class GoodsService {
         return goods;
     }
 
-    private UserDO getUserOrThrow(Long userId) {
-        UserDO user = userMapper.findById(userId);
-        if (user == null) {
-            throw new AppException(HttpStatus.NOT_FOUND, "用户不存在");
-        }
-        return user;
-    }
-
     private Long validateCategoryId(Long categoryId) {
         if (categoryId == null) {
             return null;
         }
-        CategoryDO category = categoryMapper.findById(categoryId);
-        if (category == null) {
-            throw new AppException(HttpStatus.NOT_FOUND, "商品分类不存在");
-        }
+        CategoryDO category = categoryService.getById(categoryId);
         return category.getId();
     }
 

@@ -8,15 +8,15 @@ const route = useRoute();
 
 const navItems = computed(() => {
   const items = [
-    { label: "首页", to: "/", auth: false, icon: "首" },
-    { label: "消息", to: "/messages", auth: true, icon: "聊" },
-    { label: "发布", to: "/publish", auth: true, icon: "发" }
+    { label: "首页", to: "/", auth: false, icon: "首", slot: 1 },
+    { label: "消息", to: "/messages", auth: true, icon: "聊", slot: 2 },
+    { label: "发布", to: "/publish", auth: true, icon: "发", slot: 3 }
   ];
 
   items.push(
     store.isLoggedIn.value
-      ? { label: "我的", to: "/profile", auth: true, icon: "我" }
-      : { label: "登录", to: "/auth", auth: false, icon: "登" }
+      ? { label: "我的", to: "/profile", auth: true, icon: "我", slot: 4 }
+      : { label: "登录", to: "/auth", auth: false, icon: "登", slot: 4 }
   );
 
   return items;
@@ -41,6 +41,7 @@ const showBottomBar = computed(() => route.name !== "auth");
           v-show="!item.auth || store.isLoggedIn.value"
           :to="item.to"
           class="tab-item"
+          :style="{ gridColumn: item.slot }"
         >
           <span class="tab-icon">{{ item.icon }}</span>
           <span>{{ item.label }}</span>

@@ -91,6 +91,11 @@
         WHERE id = #{id}
     </update>
 
+    <delete id="deleteByGoodsId">
+        DELETE FROM conversation_do
+        WHERE goods_id = #{goodsId}
+    </delete>
+
     <select id="listByBuyerOrSeller" resultMap="ConversationDetailMap">
         SELECT
         <include refid="ConversationSelectColumns"/>

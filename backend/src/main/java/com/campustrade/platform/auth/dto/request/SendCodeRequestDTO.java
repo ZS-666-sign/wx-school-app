@@ -7,8 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record SendCodeRequestDTO(
-        @NotBlank @Email @Pattern(regexp = "^[A-Za-z0-9._%+-]+@(qq\\.com|foxmail\\.com)$",
-                message = "只支持QQ邮箱或Foxmail邮箱") String email,
+        @NotBlank @Email @Pattern(regexp = "^[A-Za-z0-9._%+-]+@qq\\.com$",
+                message = "只支持QQ邮箱") String email,
         VerificationPurposeEnum purpose
 ) {
 }

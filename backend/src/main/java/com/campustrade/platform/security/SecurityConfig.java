@@ -32,13 +32,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
+.requestMatchers(
                                 "/api/v1/auth/**",
-                                "/api/v1/categories/**",
-                                "/api/v1/goods",
-                                "/api/v1/goods/*"
+                                "/api/v1/categories/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/goods/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/messages/**").authenticated()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())

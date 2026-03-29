@@ -1,0 +1,30 @@
+# ── 环境变量 ──
+.env
+.env.local
+.env.*.local
+
+# ── Java / Maven ──
+target/
+*.jar
+*.war
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ── Node / 前端 ──
+node_modules/
+frontend/dist/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── 日志 ──
+*.log
+logs/

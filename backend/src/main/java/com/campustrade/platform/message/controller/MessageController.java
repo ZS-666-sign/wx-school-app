@@ -32,7 +32,7 @@ public class MessageController {
         this.messageService = messageService;
     }
 
-    @PostMapping("/conversations/start")
+@PostMapping("/conversations")
     public ApiResponse<ConversationResponseDTO> startConversation(@Valid @RequestBody StartConversationRequestDTO request) {
         UserPrincipal principal = AuthUtils.currentUser();
         return ApiResponse.ok("会话已创建", messageService.startConversation(principal.userId(), request.goodsId()));
@@ -46,7 +46,7 @@ public class MessageController {
         return ApiResponse.ok(messageService.listConversations(principal.userId(), page, size));
     }
 
-    @GetMapping("/conversations/{conversationId}/items")
+    @GetMapping("/conversations/{conversationId}/messages")
     public ApiResponse<PageResponse<MessageResponseDTO>> listMessages(
             @PathVariable Long conversationId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -55,7 +55,7 @@ public class MessageController {
         return ApiResponse.ok(messageService.listMessages(principal.userId(), conversationId, page, size));
     }
 
-    @PostMapping("/items")
+    @PostMapping("/messages")
     public ApiResponse<MessageResponseDTO> sendMessage(@Valid @RequestBody SendMessageRequestDTO request) {
         UserPrincipal principal = AuthUtils.currentUser();
         return ApiResponse.ok("消息发送成功", messageService.sendMessage(principal.userId(), request));

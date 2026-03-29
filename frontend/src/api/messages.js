@@ -1,7 +1,7 @@
 import http from "./http";
 
 export function startConversation(goodsId) {
-  return http.post("/messages/conversations/start", { goodsId });
+  return http.post("/messages/conversations", { goodsId });
 }
 
 export function listConversations(params) {
@@ -9,9 +9,9 @@ export function listConversations(params) {
 }
 
 export function listMessages(conversationId, params) {
-  return http.get(`/messages/conversations/${conversationId}/items`, { params });
+  return http.get(`/messages/conversations/${conversationId}/messages`, { params });
 }
 
 export function sendMessage(payload) {
-  return http.post("/messages/items", payload);
+  return http.post("/messages/messages", payload);
 }

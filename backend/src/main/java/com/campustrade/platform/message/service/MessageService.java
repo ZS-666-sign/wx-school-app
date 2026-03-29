@@ -3,7 +3,7 @@ package com.campustrade.platform.message.service;
 import com.campustrade.platform.common.AppException;
 import com.campustrade.platform.common.PageResponse;
 import com.campustrade.platform.goods.dataobject.GoodsDO;
-import com.campustrade.platform.goods.mapper.GoodsMapper;
+import com.campustrade.platform.goods.service.GoodsService;
 import com.campustrade.platform.message.assembler.ConversationAssembler;
 import com.campustrade.platform.message.assembler.MessageAssembler;
 import com.campustrade.platform.message.dataobject.ConversationDO;
@@ -14,7 +14,7 @@ import com.campustrade.platform.message.dto.response.MessageResponseDTO;
 import com.campustrade.platform.message.mapper.ConversationMapper;
 import com.campustrade.platform.message.mapper.MessageMapper;
 import com.campustrade.platform.user.dataobject.UserDO;
-import com.campustrade.platform.user.mapper.UserMapper;
+import com.campustrade.platform.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,37 +27,34 @@ public class MessageService {
 
     private final ConversationMapper conversationMapper;
     private final MessageMapper messageMapper;
-    private final GoodsMapper goodsMapper;
-    private final UserMapper userMapper;
+    private final GoodsService goodsService;
+    private final UserService userService;
     private final ConversationAssembler conversationAssembler;
     private final MessageAssembler messageAssembler;
 
     public MessageService(ConversationMapper conversationMapper,
                           MessageMapper messageMapper,
-                          GoodsMapper goodsMapper,
-                          UserMapper userMapper,
+                          GoodsService goodsService,
+                          UserService userService,
                           ConversationAssembler conversationAssembler,
                           MessageAssembler messageAssembler) {
         this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
-        this.goodsMapper = goodsMapper;
-        this.userMapper = userMapper;
+        this.goodsService = goodsService;
+        this.userService = userService;
         this.conversationAssembler = conversationAssembler;
         this.messageAssembler = messageAssembler;
     }
 
-    @Transactional
+@Transactional
     public ConversationResponseDTO startConversation(Long buyerId, Long goodsId) {
-        UserDO buyer = getUserOrThrow(buyerId);
-        GoodsDO goods = goodsMapper.findById(goodsId);
-        if (goods == null) {
-            throw new AppException(HttpStatus.NOT_FOUND, "商品不存在");
-        }
+        userService.getById(buyerId);
+        GoodsDO goods = goodsService.getById(goodsId);
         if (goods.getSeller() != null && goods.getSeller().getId().equals(buyerId)) {
             throw new AppException(HttpStatus.BAD_REQUEST, "不能和自己发起会话");
         }
 
-        ConversationDO conversation = conversationMapper.findByGoodsIdAndBuyerId(goodsId, buyer.getId());
+        ConversationDO conversation = conversationMapper.findByGoodsIdAndBuyerId(goodsId, buyerId);
         if (conversation == null) {
             ConversationDO created = new ConversationDO();
             created.setGoodsId(goodsId);
@@ -72,7 +69,7 @@ public class MessageService {
 
     @Transactional
     public MessageResponseDTO sendMessage(Long userId, SendMessageRequestDTO request) {
-        UserDO sender = getUserOrThrow(userId);
+        UserDO sender = userService.getById(userId);
         ConversationDO conversation = getConversationOrThrow(request.conversationId());
         validateMembership(sender, conversation);
 
@@ -90,7 +87,7 @@ public class MessageService {
 
     @Transactional(readOnly = true)
     public PageResponse<ConversationResponseDTO> listConversations(Long userId, int page, int size) {
-        getUserOrThrow(userId);
+        userService.getById(userId);
         int offset = page * size;
 
         List<ConversationDO> conversations = conversationMapper.listByBuyerOrSeller(userId, size, offset);
@@ -102,7 +99,7 @@ public class MessageService {
 
     @Transactional(readOnly = true)
     public PageResponse<MessageResponseDTO> listMessages(Long userId, Long conversationId, int page, int size) {
-        UserDO user = getUserOrThrow(userId);
+        UserDO user = userService.getById(userId);
         ConversationDO conversation = getConversationOrThrow(conversationId);
         validateMembership(user, conversation);
 
@@ -120,14 +117,6 @@ public class MessageService {
             throw new AppException(HttpStatus.NOT_FOUND, "会话不存在");
         }
         return conversation;
-    }
-
-    private UserDO getUserOrThrow(Long userId) {
-        UserDO user = userMapper.findById(userId);
-        if (user == null) {
-            throw new AppException(HttpStatus.NOT_FOUND, "用户不存在");
-        }
-        return user;
     }
 
     private void validateMembership(UserDO user, ConversationDO conversation) {

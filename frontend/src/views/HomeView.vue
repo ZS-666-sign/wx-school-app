@@ -1,8 +1,12 @@
-﻿<script setup>
+<script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { listCategories } from "../api/categories";
 import { listGoods } from "../api/goods";
+import GoodsCard from "../components/GoodsCard.vue";
+import SearchInput from "../components/SearchInput.vue";
+import Loading from "../components/Loading.vue";
+import { handleApiError } from "../utils/errorHandler";
 
 const router = useRouter();
 const loading = ref(false);
@@ -23,10 +27,6 @@ const categoryItems = computed(() => [
   ...categories.value
 ]);
 
-function formatPrice(value) {
-  return `¥${Number(value || 0).toFixed(0)}`;
-}
-
 function coverHeight(index) {
   const heights = [184, 236, 196, 244, 206, 220];
   return heights[index % heights.length];
@@ -45,7 +45,7 @@ async function loadCategories() {
   try {
     categories.value = await listCategories();
   } catch (err) {
-    statusText.value = err?.message || "分类加载失败";
+    statusText.value = handleApiError(err, "分类加载失败");
   }
 }
 
@@ -61,9 +61,9 @@ async function loadGoods(resetPage = false) {
       page: query.page,
       size: query.size
     });
-    goodsItems.value = data.items || [];
+    goodsItems.value = data?.items || [];
   } catch (err) {
-    statusText.value = err?.message || "商品加载失败，请稍后重试";
+    statusText.value = handleApiError(err, "商品加载失败，请稍后重试");
     goodsItems.value = [];
   } finally {
     loading.value = false;
@@ -80,17 +80,51 @@ onMounted(async () => {
   <section class="home-page">
     <header class="paper home-hero">
       <div class="hero-top">
-        <div class="search-box">
-          <span class="search-ic">⌕</span>
-          <input
-            v-model="query.keyword"
-            placeholder="搜索你想买的闲置"
-            @keyup.enter="loadGoods(true)"
-          />
-        </div>
+        <SearchInput
+          v-model="query.keyword"
+          placeholder="搜索你想买的闲置"
+          @search="loadGoods(true)"
+        />
         <div class="hero-actions">
-          <button class="icon-btn" title="刷新" @click="loadGoods(true)">刷</button>
-          <button class="icon-btn solid" title="发布" @click="router.push('/publish')">发</button>
+          <button class="icon-btn" title="刷新" aria-label="刷新" @click="loadGoods(true)">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M19 12a7 7 0 1 1-2.05-4.95"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.1"
+              />
+              <path
+                d="M19 5v4.6h-4.6"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.1"
+              />
+            </svg>
+          </button>
+          <button class="icon-btn publish-btn" title="发布" aria-label="发布" @click="router.push('/publish')">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle
+                cx="12"
+                cy="12"
+                r="8.2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.9"
+              />
+              <path
+                d="M12 8.3v7.4M8.3 12h7.4"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-width="1.9"
+              />
+            </svg>
+          </button>
         </div>
       </div>
       <p class="hero-title">校园闲置集市</p>
@@ -110,26 +144,16 @@ onMounted(async () => {
     </section>
 
     <p v-if="statusText" class="status-line">{{ statusText }}</p>
-    <p v-if="loading" class="status-line">正在加载商品...</p>
+    <Loading v-if="loading" text="正在加载商品..." />
 
     <section v-else-if="goodsItems.length" class="waterfall">
-      <article
+      <GoodsCard
         v-for="(item, index) in goodsItems"
         :key="item.id"
-        class="goods-card"
-        @click="openGoods(item.id)"
-      >
-        <div class="cover" :style="{ height: `${coverHeight(index)}px` }">
-          <img v-if="item.imageUrls?.length" :src="item.imageUrls[0]" alt="商品图片" />
-          <div v-else class="cover-empty">暂无图片</div>
-          <span class="price-tag">{{ formatPrice(item.price) }}</span>
-          <span class="cond-tag">{{ item.conditionLevel || "成色未知" }}</span>
-        </div>
-        <div class="meta">
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.campusLocation || "校内交易" }}</p>
-        </div>
-      </article>
+        :item="item"
+        :height="coverHeight(index)"
+        @click="openGoods"
+      />
     </section>
 
     <section v-else class="empty-state paper">
@@ -159,31 +183,6 @@ onMounted(async () => {
   gap: 10px;
 }
 
-.search-box {
-  height: 40px;
-  border: 1px solid #dde4ef;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  padding: 0 10px;
-  gap: 8px;
-}
-
-.search-ic {
-  color: #8894a6;
-  font-size: 16px;
-}
-
-.search-box input {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  height: 100%;
-  font-size: 14px;
-}
-
 .hero-actions {
   display: flex;
   gap: 6px;
@@ -191,18 +190,33 @@ onMounted(async () => {
 
 .icon-btn {
   border: 1px solid #d2dbe9;
-  width: 36px;
-  height: 36px;
-  border-radius: 11px;
-  background: #fff;
-  color: #58667b;
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #253247;
   font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 0;
+  cursor: pointer;
 }
 
-.icon-btn.solid {
-  background: #1e5ea6;
-  border-color: #1e5ea6;
-  color: #fff;
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.publish-btn {
+  color: #f08f57;
+}
+
+.publish-btn svg {
+  width: 19px;
+  height: 19px;
 }
 
 .hero-title {
@@ -237,6 +251,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.8);
   color: #5e6d83;
   font-size: 13px;
+  cursor: pointer;
 }
 
 .category-pill.active {
@@ -260,77 +275,6 @@ onMounted(async () => {
   column-gap: 12px;
 }
 
-.goods-card {
-  break-inside: avoid;
-  margin-bottom: 12px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid #ece7de;
-  box-shadow: 0 8px 16px rgba(26, 34, 51, 0.06);
-  cursor: pointer;
-  animation: card-in 0.45s ease both;
-}
-
-.cover {
-  position: relative;
-  background: #f0f3f8;
-}
-
-.cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cover-empty {
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: #8c97aa;
-  font-size: 13px;
-}
-
-.price-tag {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  background: rgba(255, 255, 255, 0.96);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #1f2a37;
-}
-
-.cond-tag {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  background: rgba(30, 94, 166, 0.86);
-  color: #fff;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-}
-
-.meta {
-  padding: 10px 10px 12px;
-}
-
-.meta h3 {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.35;
-}
-
-.meta p {
-  margin: 4px 0 0;
-  color: #7d889a;
-  font-size: 12px;
-}
-
 .empty-state {
   padding: 20px 14px;
   text-align: center;
@@ -345,17 +289,6 @@ onMounted(async () => {
   margin: 0;
   color: #7f8b9f;
   font-size: 13px;
-}
-
-@keyframes card-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (min-width: 920px) {

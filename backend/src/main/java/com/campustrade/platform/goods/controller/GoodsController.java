@@ -12,6 +12,7 @@ import com.campustrade.platform.security.UserPrincipal;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,9 +36,9 @@ public class GoodsController {
         this.goodsService = goodsService;
     }
 
-    @GetMapping
+@GetMapping
     public ApiResponse<PageResponse<GoodsResponseDTO>> list(
-            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @Size(max = 100) String keyword,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) GoodsStatusEnum status,
             @RequestParam(defaultValue = "0") @Min(0) int page,

@@ -18,6 +18,8 @@ public interface ConversationMapper {
 
     int updateLastMessageAt(@Param("id") Long id, @Param("lastMessageAt") LocalDateTime lastMessageAt);
 
+    int deleteByGoodsId(@Param("goodsId") Long goodsId);
+
     List<ConversationDO> listByBuyerOrSeller(@Param("userId") Long userId,
                                              @Param("limit") int limit,
                                              @Param("offset") int offset);

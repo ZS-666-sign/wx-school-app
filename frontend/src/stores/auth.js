@@ -3,8 +3,12 @@ import { computed, ref } from "vue";
 const tokenRef = ref(localStorage.getItem("token") || "");
 const userRef = ref(
   (() => {
-    const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   })()
 );
 

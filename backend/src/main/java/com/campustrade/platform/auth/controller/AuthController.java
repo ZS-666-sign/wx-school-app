@@ -9,6 +9,7 @@ import com.campustrade.platform.auth.dto.response.AuthResponseDTO;
 import com.campustrade.platform.auth.dto.response.SendCodeResponseDTO;
 import com.campustrade.platform.common.ApiResponse;
 import com.campustrade.platform.security.AuthUtils;
+import com.campustrade.platform.user.dto.response.UserProfileResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,7 +49,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<?> me() {
+    public ApiResponse<UserProfileResponseDTO> me() {
         return ApiResponse.ok(authService.me(AuthUtils.currentUser()));
     }
 }

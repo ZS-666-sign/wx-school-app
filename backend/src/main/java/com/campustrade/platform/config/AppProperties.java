@@ -17,12 +17,12 @@ public class AppProperties {
     private String jwtSecret;
 
     @Min(1)
-    private int jwtExpirationMinutes = 10080;
+    private int jwtExpirationMinutes = 1440;
 
     private VerificationCode verificationCode = new VerificationCode();
     private Auth auth = new Auth();
     private Mail mail = new Mail();
-    private Upload upload = new Upload();
+    private Minio minio = new Minio();
     private Redis redis = new Redis();
     private Cache cache = new Cache();
 
@@ -71,9 +71,20 @@ public class AppProperties {
 
     @Getter
     @Setter
-    public static class Upload {
+    public static class Minio {
         @NotBlank
-        private String dir = "uploads";
+        private String endpoint;
+        @NotBlank
+        private String accessKey;
+        @NotBlank
+        private String secretKey;
+        @NotBlank
+        private String bucket;
+        private String publicBaseUrl = "";
+        private boolean secure = false;
+        private boolean autoCreateBucket = true;
+        @Min(1)
+        private int presignExpiryDays = 7;
     }
 
     @Getter

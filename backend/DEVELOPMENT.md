@@ -10,7 +10,7 @@ This backend is a Spring Boot 3 service for a campus second-hand trading platfor
 - Goods create/update/delete/list/status update
 - Category listing
 - Buyer/seller conversation and messaging
-- Image upload and file serving
+- Image upload with MinIO object storage
 
 ## Tech Stack
 
@@ -26,6 +26,7 @@ This backend is a Spring Boot 3 service for a campus second-hand trading platfor
 - H2 / MySQL
 - Redis
 - Maven
+- MinIO
 
 ## Package Structure
 
@@ -120,7 +121,7 @@ Defined in `src/main/resources/application.yml`:
 - `app.verification-code.*`
 - `app.auth.*`
 - `app.mail.*`
-- `app.upload.dir`
+- `app.minio.*`
 
 ## API Paths 
 
@@ -187,4 +188,10 @@ export VERIFICATION_LIMIT_KEY_PREFIX="auth:code:limit:"
 export MAX_LOGIN_FAILURES="5"
 export LOGIN_LOCK_MINUTES="15"
 
-export UPLOAD_DIR="uploads"
+export MINIO_ENDPOINT="http://127.0.0.1:9000"
+export MINIO_ACCESS_KEY="your-access-key"
+export MINIO_SECRET_KEY="your-secret-key"
+export MINIO_BUCKET="campus-trade-images"
+export MINIO_PUBLIC_BASE_URL="http://127.0.0.1:9000/campus-trade-images"
+export MINIO_SECURE="false"
+export MINIO_AUTO_CREATE_BUCKET="true"

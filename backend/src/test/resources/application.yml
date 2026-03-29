@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
   datasource:
     url: jdbc:h2:mem:campus_trade_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
@@ -13,6 +17,14 @@ spring:
 
 app:
   jwt-secret: test-secret-should-be-at-least-32-bytes-long
+  minio:
+    endpoint: http://127.0.0.1:9000
+    access-key: test-access
+    secret-key: test-secret
+    bucket: test-bucket
+    public-base-url: http://127.0.0.1:9000/test-bucket
+    secure: false
+    auto-create-bucket: true
   redis:
     required: false
   verification-code:

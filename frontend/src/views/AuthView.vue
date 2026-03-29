@@ -1,14 +1,24 @@
-﻿<script setup>
+<script setup>
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { authStore } from "../stores/auth";
 import { login, register, resetPassword, sendEmailCode } from "../api/auth";
+import BackButton from "../components/BackButton.vue";
+import CodeInput from "../components/CodeInput.vue";
+import { handleApiError } from "../utils/errorHandler";
+import { CODE_COOLDOWN_SECONDS, EMAIL_REGEX } from "../utils/constants";
 
 const router = useRouter();
 const store = authStore();
 const loading = ref(false);
 const message = ref("");
 const mode = ref("login");
+
+// 验证码倒计时
+const sendCodeCooldown = ref(0);
+const resetCodeCooldown = ref(0);
+let sendCodeTimer = null;
+let resetCodeTimer = null;
 
 const registerForm = reactive({
   email: "",
@@ -28,36 +38,60 @@ const resetForm = reactive({
   newPassword: ""
 });
 
-function splitCode(raw) {
-  const text = (raw || "").replace(/\D/g, "").slice(0, 6);
-  return Array.from({ length: 6 }, (_, i) => text[i] || "");
-}
+// 邮箱格式验证
+const isRegisterEmailValid = computed(() => EMAIL_REGEX.test(registerForm.email));
+const isResetEmailValid = computed(() => EMAIL_REGEX.test(resetForm.email));
+const isLoginEmailValid = computed(() => EMAIL_REGEX.test(loginForm.email));
 
-const registerCodeCells = computed(() => splitCode(registerForm.code));
-const resetCodeCells = computed(() => splitCode(resetForm.code));
-
-function getErr(err) {
-  if (err?.data && typeof err.data === "object") {
-    const values = Object.values(err.data);
-    if (values.length) return String(values[0]);
+function startCooldown(type) {
+  if (type === "register") {
+    sendCodeCooldown.value = CODE_COOLDOWN_SECONDS;
+    sendCodeTimer = setInterval(() => {
+      sendCodeCooldown.value--;
+      if (sendCodeCooldown.value <= 0) {
+        clearInterval(sendCodeTimer);
+        sendCodeTimer = null;
+      }
+    }, 1000);
+  } else {
+    resetCodeCooldown.value = CODE_COOLDOWN_SECONDS;
+    resetCodeTimer = setInterval(() => {
+      resetCodeCooldown.value--;
+      if (resetCodeCooldown.value <= 0) {
+        clearInterval(resetCodeTimer);
+        resetCodeTimer = null;
+      }
+    }, 1000);
   }
-  if (err?.message) return err.message;
-  return "请求失败，请稍后重试";
 }
 
-async function handleSendCode(purpose, email) {
+async function handleSendCode(purpose, email, type) {
   message.value = "";
   if (!email) {
     message.value = "请先输入邮箱地址";
     return;
   }
+  if (!EMAIL_REGEX.test(email)) {
+    message.value = "请输入正确的 qq.com 邮箱";
+    return;
+  }
+  if (type === "register" && sendCodeCooldown.value > 0) {
+    message.value = `请等待 ${sendCodeCooldown.value} 秒后重试`;
+    return;
+  }
+  if (type === "reset" && resetCodeCooldown.value > 0) {
+    message.value = `请等待 ${resetCodeCooldown.value} 秒后重试`;
+    return;
+  }
+
   try {
     const data = await sendEmailCode({ email, purpose });
+    startCooldown(type);
     message.value = data?.debugCode
       ? `开发环境验证码：${data.debugCode}`
       : "验证码已发送，请查收邮箱";
   } catch (err) {
-    message.value = getErr(err);
+    message.value = handleApiError(err, "验证码发送失败");
   }
 }
 
@@ -69,7 +103,7 @@ async function handleRegister() {
     store.setAuth(data.token, data.user);
     router.push("/");
   } catch (err) {
-    message.value = getErr(err);
+    message.value = handleApiError(err, "注册失败");
   } finally {
     loading.value = false;
   }
@@ -83,7 +117,7 @@ async function handleLogin() {
     store.setAuth(data.token, data.user);
     router.push("/");
   } catch (err) {
-    message.value = getErr(err);
+    message.value = handleApiError(err, "登录失败");
   } finally {
     loading.value = false;
   }
@@ -98,7 +132,7 @@ async function handleReset() {
     mode.value = "login";
     loginForm.email = resetForm.email;
   } catch (err) {
-    message.value = getErr(err);
+    message.value = handleApiError(err, "密码重置失败");
   } finally {
     loading.value = false;
   }
@@ -110,7 +144,7 @@ async function handleReset() {
     <div class="auth-gradient"></div>
 
     <header class="auth-head">
-      <button class="back-btn" @click="router.push('/')">返回</button>
+      <BackButton to="/" />
       <button class="switch-btn" @click="mode = mode === 'login' ? 'register' : 'login'">
         {{ mode === "login" ? "去注册" : "去登录" }}
       </button>
@@ -125,7 +159,13 @@ async function handleReset() {
     <form v-if="mode === 'login'" class="auth-form" @submit.prevent="handleLogin">
       <div class="form-row">
         <label>邮箱</label>
-        <input v-model="loginForm.email" placeholder="请输入邮箱" autocomplete="username" required />
+        <input
+          v-model="loginForm.email"
+          placeholder="请输入邮箱"
+          autocomplete="username"
+          required
+        />
+        <small v-if="loginForm.email && !isLoginEmailValid" class="field-error">请输入正确的 qq.com 邮箱</small>
       </div>
       <div class="form-row">
         <label>密码</label>
@@ -137,7 +177,12 @@ async function handleReset() {
           required
         />
       </div>
-      <button class="button primary full-btn" :disabled="loading">{{ loading ? "登录中..." : "登录" }}</button>
+      <button
+        class="button primary full-btn"
+        :disabled="loading || !isLoginEmailValid || !loginForm.password"
+      >
+        {{ loading ? "登录中..." : "登录" }}
+      </button>
       <button type="button" class="text-link" @click="mode = 'reset'">忘记密码？</button>
     </form>
 
@@ -145,31 +190,52 @@ async function handleReset() {
       <div class="form-row">
         <label>邮箱</label>
         <div class="inline-row">
-          <input v-model="registerForm.email" placeholder="请输入邮箱" required />
+          <input
+            v-model="registerForm.email"
+            placeholder="请输入邮箱"
+            required
+          />
           <button
             type="button"
             class="button send-btn"
-            @click="handleSendCode('REGISTER', registerForm.email)"
+            :disabled="sendCodeCooldown > 0 || !isRegisterEmailValid"
+            @click="handleSendCode('REGISTER', registerForm.email, 'register')"
           >
-            发送码
+            {{ sendCodeCooldown > 0 ? `${sendCodeCooldown}s` : "发送码" }}
           </button>
         </div>
+        <small v-if="registerForm.email && !isRegisterEmailValid" class="field-error">请输入正确的 qq.com 邮箱</small>
       </div>
 
       <div class="form-row">
         <label>验证码</label>
-        <input v-model="registerForm.code" maxlength="6" inputmode="numeric" placeholder="输入6位验证码" required />
+        <CodeInput v-model="registerForm.code" />
       </div>
 
       <div class="form-row">
         <label>昵称</label>
-        <input v-model="registerForm.nickname" placeholder="给自己起个昵称" required />
+        <input
+          v-model="registerForm.nickname"
+          placeholder="给自己起个昵称"
+          required
+        />
       </div>
       <div class="form-row">
         <label>密码</label>
-        <input v-model="registerForm.password" type="password" placeholder="设置登录密码" required />
+        <input
+          v-model="registerForm.password"
+          type="password"
+          placeholder="设置登录密码（至少6位）"
+          minlength="6"
+          required
+        />
       </div>
-      <button class="button primary full-btn" :disabled="loading">{{ loading ? "提交中..." : "完成注册" }}</button>
+      <button
+        class="button primary full-btn"
+        :disabled="loading || !isRegisterEmailValid || !registerForm.code || !registerForm.nickname || !registerForm.password"
+      >
+        {{ loading ? "提交中..." : "完成注册" }}
+      </button>
       <button type="button" class="text-link" @click="mode = 'login'">已有账号，去登录</button>
     </form>
 
@@ -177,30 +243,44 @@ async function handleReset() {
       <div class="form-row">
         <label>邮箱</label>
         <div class="inline-row">
-          <input v-model="resetForm.email" placeholder="请输入注册邮箱" required />
+          <input
+            v-model="resetForm.email"
+            placeholder="请输入注册邮箱"
+            required
+          />
           <button
             type="button"
             class="button send-btn"
-            @click="handleSendCode('RESET_PASSWORD', resetForm.email)"
+            :disabled="resetCodeCooldown > 0 || !isResetEmailValid"
+            @click="handleSendCode('RESET_PASSWORD', resetForm.email, 'reset')"
           >
-            发送码
+            {{ resetCodeCooldown > 0 ? `${resetCodeCooldown}s` : "发送码" }}
           </button>
         </div>
+        <small v-if="resetForm.email && !isResetEmailValid" class="field-error">请输入正确的 qq.com 邮箱</small>
       </div>
 
       <div class="form-row">
         <label>验证码</label>
-        <div class="code-row">
-          <span v-for="(n, i) in resetCodeCells" :key="i" class="code-cell">{{ n || " " }}</span>
-        </div>
-        <input v-model="resetForm.code" maxlength="6" inputmode="numeric" placeholder="输入6位验证码" required />
+        <CodeInput v-model="resetForm.code" />
       </div>
 
       <div class="form-row">
         <label>新密码</label>
-        <input v-model="resetForm.newPassword" type="password" placeholder="输入新密码" required />
+        <input
+          v-model="resetForm.newPassword"
+          type="password"
+          placeholder="输入新密码（至少6位）"
+          minlength="6"
+          required
+        />
       </div>
-      <button class="button primary full-btn" :disabled="loading">{{ loading ? "提交中..." : "重置密码" }}</button>
+      <button
+        class="button primary full-btn"
+        :disabled="loading || !isResetEmailValid || !resetForm.code || !resetForm.newPassword"
+      >
+        {{ loading ? "提交中..." : "重置密码" }}
+      </button>
       <button type="button" class="text-link" @click="mode = 'login'">返回登录</button>
     </form>
 
@@ -232,7 +312,6 @@ async function handleReset() {
   align-items: center;
 }
 
-.back-btn,
 .switch-btn {
   border: 1px solid #d8e1ee;
   background: rgba(255, 255, 255, 0.86);
@@ -241,6 +320,7 @@ async function handleReset() {
   height: 38px;
   padding: 0 12px;
   font-size: 13px;
+  cursor: pointer;
 }
 
 .hero {
@@ -302,6 +382,7 @@ async function handleReset() {
   color: #6d7f97;
   font-size: 13px;
   padding: 0;
+  cursor: pointer;
 }
 
 .status-text {
@@ -314,6 +395,13 @@ async function handleReset() {
 
 .status-text.error {
   color: var(--danger);
+}
+
+.field-error {
+  display: block;
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 @media (min-width: 920px) {
