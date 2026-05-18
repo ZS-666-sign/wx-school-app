@@ -39,7 +39,10 @@ Component({
     },
 
     onShow() {
-      this.loadGoods(true)
+      const now = Date.now()
+      if (now - (this as any)._lastLoadTime > 30_000) {
+        this.loadGoods(true)
+      }
     },
 
     onPullDownRefresh() {
@@ -170,6 +173,7 @@ Component({
           page: nextPage + 1,
           hasMore
         })
+        ;(this as any)._lastLoadTime = Date.now()
       } catch (_err) {
         if (!append) {
           this.setData({

@@ -41,11 +41,11 @@ app:
     required: ${REDIS_REQUIRED:true}
   cache:
     category-ttl-minutes: ${CACHE_CATEGORY_TTL_MINUTES:30}
-    goods-list-ttl-minutes: ${CACHE_GOODS_LIST_TTL_MINUTES:2}
+    goods-list-ttl-minutes: ${CACHE_GOODS_LIST_TTL_MINUTES:10}
   verification-code:
     expire-minutes: ${VERIFICATION_CODE_EXPIRE_MINUTES:5}
     resend-cooldown-seconds: ${VERIFICATION_CODE_RESEND_COOLDOWN:60}
-    hourly-limit: ${VERIFICATION_CODE_HOURLY_LIMIT:8}
+    hourly-limit: ${VERIFICATION_CODE_HOURLY_LIMIT:6}
     key-prefix: "auth:code:"
     limit-prefix: "auth:code:limit:"
   auth:
@@ -73,5 +73,7 @@ app:
   image-audit:
     pending-placeholder-url: ${IMAGE_AUDIT_PENDING_PLACEHOLDER_URL:https://www.ahut-campus.site/campus-trade/images/2026/04/auditing.webp}
     reviewer-user-ids: ${IMAGE_AUDIT_REVIEWER_USER_IDS:1}
+  monitoring:
+    goods-list-slow-threshold-ms: ${GOODS_LIST_SLOW_THRESHOLD_MS:300}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}

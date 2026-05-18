@@ -33,10 +33,6 @@ public class CategoryService {
                 .toList();
     }
 
-@CacheEvict(cacheNames = "category:list", allEntries = true)
-    public void evictCategoryListCache() {
-    }
-
     @Transactional(readOnly = true)
     public CategoryDO getById(Long categoryId) {
         if (categoryId == null) {
@@ -47,5 +43,10 @@ public class CategoryService {
             throw new AppException(HttpStatus.NOT_FOUND, "商品分类不存在");
         }
         return category;
+    }
+
+    @CacheEvict(cacheNames = "category:list", allEntries = true)
+    public void evictCategoryListCache() {
+        // Used after bootstrapping default categories.
     }
 }

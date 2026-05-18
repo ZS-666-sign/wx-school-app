@@ -31,6 +31,7 @@ public class AppProperties {
     private Cache cache = new Cache();
     private Cors cors = new Cors();
     private ImageAudit imageAudit = new ImageAudit();
+    private Monitoring monitoring = new Monitoring();
 
     @Getter
     @Setter
@@ -117,5 +118,12 @@ public class AppProperties {
     public static class ImageAudit {
         private String pendingPlaceholderUrl = "";
         private List<Long> reviewerUserIds = List.of();
+    }
+
+    @Getter
+    @Setter
+    public static class Monitoring {
+        @Min(1)
+        private long goodsListSlowThresholdMs = 300;
     }
 }

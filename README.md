@@ -6,7 +6,7 @@
 
 | 层 | 技术 |
 |---|------|
-| **小程序前端** | 微信原生小程序 (WXML / WXSS / JS) |
+| **小程序前端** | 微信原生小程序 (WXML / WXSS / TS) |
 | **后端** | Spring Boot 3.3.5 / Java 17 / MyBatis 3.0.4 |
 | **数据库** | MySQL (生产) / H2 (测试) |
 | **缓存** | Redis + Spring Cache |
@@ -21,7 +21,7 @@
 ```
 campus_app/
 ├── v1/                    # Spring Boot 后端
-├── wxui_v1/               # 微信小程序前端
+├── wxui_v2/               # 微信小程序前端
 ├── checkui/               # 图片审核管理后台
 └── CLAUDE.md              # AI 辅助开发指南
 ```
@@ -49,11 +49,11 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar   # 运行打包好的 JAR
 | `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` | QQ 邮箱 SMTP 配置 | — |
 | `MINIO_ENDPOINT` / `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `MINIO_BUCKET` | MinIO 配置 | — |
 
-### 小程序 (wxui_v1/)
+### 小程序 (wxui_v2/)
 
-使用微信开发者工具打开 `wxui_v1/` 目录。无需构建步骤，原生小程序项目直接运行。
+使用微信开发者工具打开 `wxui_v2/` 目录。无需构建步骤，原生小程序项目直接运行。
 
-环境切换：编辑 `config/env.js`，修改 `ENV.current` 为 `'dev'` 或 `'prod'`。
+环境切换：编辑 `config/env.ts`，修改 `ENV.current` 为 `'dev'` 或 `'prod'`。
 
 ### 管理后台 (checkui/)
 
