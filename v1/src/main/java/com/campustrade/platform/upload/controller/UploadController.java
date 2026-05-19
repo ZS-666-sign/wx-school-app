@@ -27,7 +27,7 @@ public class UploadController {
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<UploadResponseDTO> uploadImage(@RequestParam("file") MultipartFile file) {
-        return ApiResponse.ok("Upload success", uploadService.storeImage(file));
+        return ApiResponse.ok("图片上传成功", uploadService.storeImage(file));
     }
 
     @PostMapping("/presign/batch")

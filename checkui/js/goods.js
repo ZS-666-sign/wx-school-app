@@ -94,7 +94,7 @@ async function hydrateSession() {
     clearSession()
     renderSession()
     renderTable()
-    showToast(error.message || '登录已失效，请重新登录', 'error')
+    showToast(error.message || UI_MESSAGES.SESSION_EXPIRED, 'error')
   }
 }
 
@@ -212,7 +212,7 @@ async function handleModalConfirm() {
 
 async function deleteSingle(goodsId) {
   if (!state.token) {
-    showToast('请先登录', 'error')
+    showToast(UI_MESSAGES.LOGIN_REQUIRED, 'error')
     return
   }
 
@@ -233,7 +233,7 @@ async function deleteSingle(goodsId) {
     renderBatchBar()
     updatePagination()
   } catch (error) {
-    showToast(error.message || '删除失败', 'error')
+    showToast(error.message || actionFailedMessage('删除'), 'error')
   } finally {
     state.deletingIds.delete(goodsId)
     renderTable()
@@ -318,8 +318,8 @@ async function loadGoods() {
   } catch (error) {
     state.items = []
     state.total = 0
-    renderTable(error.message || '加载失败')
-    showToast(error.message || '加载失败', 'error')
+    renderTable(error.message || UI_MESSAGES.LOAD_FAILED)
+    showToast(error.message || UI_MESSAGES.LOAD_FAILED, 'error')
   } finally {
     state.loading = false
     renderTable()
@@ -356,7 +356,7 @@ function renderTable(message) {
       <tr>
         <td colspan="9" class="empty-table">
           <div style="padding:24px;">
-            <h4 style="margin:0 0 8px;">请先登录</h4>
+            <h4 style="margin:0 0 8px;">${UI_MESSAGES.LOGIN_REQUIRED}</h4>
             <p style="margin:0;">登录后可查看商品列表</p>
           </div>
         </td>
@@ -473,11 +473,16 @@ async function request(path, options = {}) {
     headers.Authorization = `Bearer ${state.token}`
   }
 
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body === null || options.body === undefined ? undefined : JSON.stringify(options.body)
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body === null || options.body === undefined ? undefined : JSON.stringify(options.body)
+    })
+  } catch (_error) {
+    throw new Error(UI_MESSAGES.NETWORK_ERROR)
+  }
 
   let payload = null
   try {
@@ -492,7 +497,9 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok || !payload?.success) {
-    const message = payload?.message || `请求失败（${response.status}）`
+    const message = payload?.message || (response.status === 401
+      ? UI_MESSAGES.LOGIN_REQUIRED
+      : UI_MESSAGES.REQUEST_FAILED)
     throw new Error(message)
   }
 

@@ -1,4 +1,5 @@
 import { request, clearTokenCache } from '../../utils/request'
+import { COMMON_MESSAGES, actionFailed } from '../../utils/messages'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@qq\.com$/
 const CODE_REGEX = /^\d{6}$/
@@ -310,10 +311,10 @@ Component({
           this.startCooldown(codeType)
           this.setData({ message: '验证码已发送，请查收邮箱' })
         } else {
-          this.setData({ message: res.data?.message || '验证码发送失败' })
+          this.setData({ message: res.data?.message || actionFailed('验证码发送') })
         }
       }).catch(() => {
-        this.setData({ message: '网络请求失败，请检查网络连接' })
+        this.setData({ message: COMMON_MESSAGES.NETWORK_ERROR })
       }).finally(() => {
         this.setData({ sendingCode: false })
       })
@@ -342,7 +343,7 @@ Component({
           this.setData({ message: res.data?.message || '邮箱或密码错误' })
         }
       }).catch(() => {
-        this.setData({ message: '网络请求失败，请检查网络连接' })
+        this.setData({ message: COMMON_MESSAGES.NETWORK_ERROR })
       }).finally(() => {
         this.setData({ loading: false })
       })
@@ -396,10 +397,10 @@ Component({
           wx.showToast({ title: '注册成功', icon: 'success' })
           setTimeout(() => this.goAfterAuth(), 500)
         } else {
-          this.setData({ message: res.data?.message || '注册失败，请重试' })
+          this.setData({ message: res.data?.message || actionFailed('注册') })
         }
       }).catch(() => {
-        this.setData({ message: '网络请求失败，请检查网络连接' })
+        this.setData({ message: COMMON_MESSAGES.NETWORK_ERROR })
       }).finally(() => {
         this.setData({ loading: false })
       })
@@ -442,10 +443,10 @@ Component({
           })
           wx.showToast({ title: '重置成功', icon: 'success' })
         } else {
-          this.setData({ message: res.data?.message || '重置失败，请重试' })
+          this.setData({ message: res.data?.message || actionFailed('重置') })
         }
       }).catch(() => {
-        this.setData({ message: '网络请求失败，请检查网络连接' })
+        this.setData({ message: COMMON_MESSAGES.NETWORK_ERROR })
       }).finally(() => {
         this.setData({ loading: false })
       })

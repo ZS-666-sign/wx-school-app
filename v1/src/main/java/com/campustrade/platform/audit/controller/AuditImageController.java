@@ -44,7 +44,7 @@ public class AuditImageController {
     @PostMapping("/{imageId}/approve")
     public ApiResponse<AuditImageResponseDTO> approve(@PathVariable Long imageId) {
         UserPrincipal principal = AuthUtils.currentUser();
-        return ApiResponse.ok("Image approved", auditImageService.approve(principal.userId(), imageId));
+        return ApiResponse.ok("图片审核通过", auditImageService.approve(principal.userId(), imageId));
     }
 
     @PostMapping("/{imageId}/reject")
@@ -52,7 +52,7 @@ public class AuditImageController {
                                                      @Valid @RequestBody(required = false) ImageRejectRequestDTO request) {
         UserPrincipal principal = AuthUtils.currentUser();
         String remark = request == null ? null : request.remark();
-        return ApiResponse.ok("Image rejected", auditImageService.reject(principal.userId(), imageId, remark));
+        return ApiResponse.ok("图片已驳回", auditImageService.reject(principal.userId(), imageId, remark));
     }
 
     // ==================== 头像审核接口 ====================
@@ -69,7 +69,7 @@ public class AuditImageController {
     @PostMapping("/avatars/{userId}/approve")
     public ApiResponse<AvatarAuditResponseDTO> approveAvatar(@PathVariable Long userId) {
         UserPrincipal principal = AuthUtils.currentUser();
-        return ApiResponse.ok("Avatar approved", auditImageService.approveAvatar(principal.userId(), userId));
+        return ApiResponse.ok("头像审核通过", auditImageService.approveAvatar(principal.userId(), userId));
     }
 
     @PostMapping("/avatars/{userId}/reject")
@@ -77,6 +77,6 @@ public class AuditImageController {
                                                             @Valid @RequestBody(required = false) ImageRejectRequestDTO request) {
         UserPrincipal principal = AuthUtils.currentUser();
         String remark = request == null ? null : request.remark();
-        return ApiResponse.ok("Avatar rejected", auditImageService.rejectAvatar(principal.userId(), userId, remark));
+        return ApiResponse.ok("头像已驳回", auditImageService.rejectAvatar(principal.userId(), userId, remark));
     }
 }

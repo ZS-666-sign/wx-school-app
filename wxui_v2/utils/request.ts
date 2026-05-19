@@ -1,3 +1,5 @@
+import { COMMON_MESSAGES } from './messages'
+
 let cachedToken: string | null | undefined
 
 export function getToken(): string | undefined {
@@ -38,13 +40,13 @@ export function request<T = unknown>(options: RequestOptions): Promise<WxRespons
             wx.removeStorageSync('user')
             clearTokenCache()
             wx.redirectTo({ url: '/pages/auth/auth' })
-            reject(new Error('未登录'))
+            reject(new Error(COMMON_MESSAGES.LOGIN_REQUIRED))
           }
           return
         }
         resolve(res as unknown as WxResponse<T>)
       },
-      fail: (err: WechatMiniprogram.GeneralCallbackResult) => reject(err)
+      fail: () => reject(new Error(COMMON_MESSAGES.NETWORK_ERROR))
     })
   })
 }

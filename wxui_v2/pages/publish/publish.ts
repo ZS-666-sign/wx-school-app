@@ -1,5 +1,6 @@
 import { request } from '../../utils/request'
 import { uploadImage } from '../../utils/upload'
+import { COMMON_MESSAGES, actionFailed, loadFailed } from '../../utils/messages'
 
 const app = getApp<{ globalData: { baseUrl: string } }>()
 
@@ -97,13 +98,13 @@ Component({
           method: 'GET'
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '分类加载失败' })
+          this.setData({ info: res.data?.message || loadFailed('分类') })
           return
         }
         const categories = (res.data?.data as unknown as Category[]) || []
         this.setData({ categories })
       } catch (_err) {
-        this.setData({ info: '分类加载失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       }
     },
 
@@ -115,7 +116,7 @@ Component({
           method: 'GET'
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '商品信息加载失败' })
+          this.setData({ info: res.data?.message || loadFailed('商品信息') })
           return
         }
         const goods = res.data?.data as unknown as GoodsItem | undefined
@@ -135,7 +136,7 @@ Component({
           }
         })
       } catch (_err) {
-        this.setData({ info: '商品信息加载失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       } finally {
         this.setData({ loading: false })
       }
@@ -191,7 +192,7 @@ Component({
             const photos = this.data.form.photos.concat(results)
             this.setData({ 'form.photos': photos, 'errors.photos': '', info: '' })
           } catch (err) {
-            const msg = err instanceof Error ? err.message : '图片上传失败，请稍后重试'
+            const msg = err instanceof Error ? err.message : COMMON_MESSAGES.IMAGE_UPLOAD_FAILED
             this.setData({ info: msg })
           } finally {
             wx.hideLoading()
@@ -269,7 +270,7 @@ Component({
           })
         }
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '提交失败' })
+          this.setData({ info: res.data?.message || actionFailed('提交') })
           return
         }
         wx.showToast({
@@ -281,7 +282,7 @@ Component({
           wx.switchTab({ url: '/pages/profile/profile' })
         }, 1200)
       } catch (_err) {
-        this.setData({ info: '提交失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       } finally {
         this.setData({ submitting: false })
       }

@@ -30,7 +30,7 @@
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": { ... }
 }
 ```
@@ -307,7 +307,7 @@ GET /api/v1/auth/me
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "id": 1,
     "email": "123456@qq.com",
@@ -346,7 +346,7 @@ GET /api/v1/goods?status=ON_SALE&page=0&size=24&keyword=教材&categoryId=1
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "items": [
       {
@@ -389,7 +389,7 @@ GET /api/v1/goods/{id}
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "id": 1,
     "title": "二手教材",
@@ -575,7 +575,7 @@ GET /api/v1/goods/mine
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "items": [ ... ],
     "total": 5,
@@ -601,7 +601,7 @@ GET /api/v1/categories
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": [
     { "id": 1, "name": "书籍", "sortOrder": 1 },
     { "id": 2, "name": "电子产品", "sortOrder": 2 },
@@ -626,7 +626,7 @@ GET /api/v1/users/me
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "id": 1,
     "email": "123456@qq.com",
@@ -736,7 +736,7 @@ GET /api/v1/messages/conversations
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "items": [
       {
@@ -781,7 +781,7 @@ GET /api/v1/messages/conversations/{conversationId}/messages
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "items": [
       {
@@ -861,7 +861,7 @@ POST /api/v1/uploads/image
 ```json
 {
   "success": true,
-  "message": "Upload success",
+  "message": "图片上传成功",
   "data": {
     "url": "https://...",
     "filename": "abc123.jpg"
@@ -896,7 +896,7 @@ POST /api/v1/uploads/presign/batch
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "https://minio-host/bucket/images/2026/04/file1.jpg": "https://presigned-url?signature=..."
   }
@@ -954,7 +954,7 @@ GET /api/v1/audit/images
 ```json
 {
   "success": true,
-  "message": "OK",
+  "message": "操作成功",
   "data": {
     "items": [
       {
@@ -997,7 +997,7 @@ POST /api/v1/audit/images/{imageId}/approve
 ```json
 {
   "success": true,
-  "message": "Image approved",
+  "message": "图片审核通过",
   "data": {
     "imageId": 1,
     "auditStatus": "APPROVED",
@@ -1038,7 +1038,7 @@ POST /api/v1/audit/images/{imageId}/reject
 ```json
 {
   "success": true,
-  "message": "Image rejected",
+  "message": "图片已驳回",
   "data": {
     "imageId": 1,
     "auditStatus": "REJECTED",

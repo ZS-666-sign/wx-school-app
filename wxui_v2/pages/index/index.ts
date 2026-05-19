@@ -1,4 +1,5 @@
 import { request } from '../../utils/request'
+import { COMMON_MESSAGES, loadFailed } from '../../utils/messages'
 
 const app = getApp<{ globalData: { baseUrl: string } }>()
 
@@ -97,7 +98,7 @@ Component({
           method: 'GET'
         })
         if (!res.data?.success) {
-          this.setData({ statusText: res.data?.message || '分类加载失败' })
+          this.setData({ statusText: res.data?.message || loadFailed('分类') })
           return
         }
         const categories = (res.data?.data as unknown as Category[]) || []
@@ -105,7 +106,7 @@ Component({
           categoryItems: [{ id: '', name: '推荐' }, ...categories]
         })
       } catch (_err) {
-        this.setData({ statusText: '分类加载失败，请检查网络连接' })
+        this.setData({ statusText: COMMON_MESSAGES.NETWORK_ERROR })
       }
     },
 
@@ -136,7 +137,7 @@ Component({
         })
         if (!res.data?.success) {
           this.setData({
-            statusText: res.data?.message || '商品加载失败',
+            statusText: res.data?.message || loadFailed('商品'),
             goodsItems: [],
             leftGoods: [],
             rightGoods: []
@@ -174,7 +175,7 @@ Component({
       } catch (_err) {
         if (!append) {
           this.setData({
-            statusText: '商品加载失败，请检查网络连接',
+            statusText: COMMON_MESSAGES.NETWORK_ERROR,
             goodsItems: [],
             leftGoods: [],
             rightGoods: []

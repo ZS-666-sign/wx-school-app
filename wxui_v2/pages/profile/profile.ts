@@ -1,5 +1,6 @@
 import { request } from '../../utils/request'
 import { uploadImage } from '../../utils/upload'
+import { COMMON_MESSAGES, actionFailed, loadFailed } from '../../utils/messages'
 
 const app = getApp<{ globalData: { baseUrl: string } }>()
 
@@ -55,7 +56,7 @@ Component({
           method: 'GET'
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '个人资料加载失败' })
+          this.setData({ info: res.data?.message || loadFailed('个人资料') })
           return
         }
         const profile = (res.data?.data as unknown as UserProfile) || { nickname: '', avatarUrl: '' }
@@ -64,7 +65,7 @@ Component({
           avatarValue: profile.avatarUrl || ''
         })
       } catch (_err) {
-        this.setData({ info: '个人资料加载失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       }
     },
 
@@ -85,7 +86,7 @@ Component({
           method: 'GET'
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '商品列表加载失败' })
+          this.setData({ info: res.data?.message || loadFailed('商品列表') })
           return
         }
 
@@ -108,7 +109,7 @@ Component({
         })
       } catch (_err) {
         if (!append) {
-          this.setData({ info: '商品列表加载失败，请检查网络连接' })
+          this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
         }
       } finally {
         this.setData({ loading: false, loadingMore: false })
@@ -135,8 +136,9 @@ Component({
               avatarValue: upload.filename,
               info: '头像已上传，保存后生效'
             })
-          } catch (_err) {
-            this.setData({ info: '头像上传失败' })
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : COMMON_MESSAGES.AVATAR_UPLOAD_FAILED
+            this.setData({ info: msg })
           } finally {
             wx.hideLoading()
           }
@@ -163,7 +165,7 @@ Component({
           } as unknown as Record<string, unknown>
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '保存失败' })
+          this.setData({ info: res.data?.message || actionFailed('保存') })
           return
         }
         const profile = (res.data?.data as unknown as UserProfile) || this.data.profile
@@ -180,7 +182,7 @@ Component({
         })
         wx.showToast({ title: '保存成功', icon: 'success' })
       } catch (_err) {
-        this.setData({ info: '保存失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       } finally {
         this.setData({ saving: false })
       }
@@ -208,13 +210,13 @@ Component({
           data: { status: nextStatus }
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '状态更新失败' })
+          this.setData({ info: res.data?.message || actionFailed('状态更新') })
           return
         }
         wx.showToast({ title: nextStatus === 'ON_SALE' ? '已上架' : '已下架', icon: 'success' })
         this.loadMyGoods(true)
       } catch (_err) {
-        this.setData({ info: '状态更新失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       }
     },
 
@@ -234,13 +236,13 @@ Component({
               method: 'DELETE'
             })
             if (!deleteRes.data?.success) {
-              this.setData({ info: deleteRes.data?.message || '删除失败' })
+              this.setData({ info: deleteRes.data?.message || actionFailed('删除') })
               return
             }
             wx.showToast({ title: '已删除', icon: 'success' })
             this.loadMyGoods(true)
           } catch (_err) {
-            this.setData({ info: '删除失败，请检查网络连接' })
+            this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
           }
         }
       })

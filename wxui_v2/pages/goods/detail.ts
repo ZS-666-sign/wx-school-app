@@ -1,4 +1,5 @@
 import { request } from '../../utils/request'
+import { COMMON_MESSAGES, loadFailed } from '../../utils/messages'
 
 const app = getApp<{ globalData: { baseUrl: string } }>()
 const PLACEHOLDER_IMAGE = '/static/auditing.webp'
@@ -46,7 +47,7 @@ Component({
           method: 'GET'
         })
         if (!res.data?.success) {
-          this.setData({ info: res.data?.message || '商品详情加载失败' })
+          this.setData({ info: res.data?.message || loadFailed('商品详情') })
           return
         }
         const goods = res.data?.data as unknown as GoodsItem | undefined
@@ -67,7 +68,7 @@ Component({
 
         this.setData({ goods: goods || null })
       } catch (_err) {
-        this.setData({ info: '商品详情加载失败，请检查网络连接' })
+        this.setData({ info: COMMON_MESSAGES.NETWORK_ERROR })
       } finally {
         this.setData({ loading: false })
       }

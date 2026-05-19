@@ -113,7 +113,7 @@ async function hydrateSession() {
     renderSession()
     renderQueue()
     renderDetail()
-    showToast(error.message || '登录已失效，请重新登录', 'error')
+    showToast(error.message || UI_MESSAGES.SESSION_EXPIRED, 'error')
   }
 }
 
@@ -147,7 +147,7 @@ async function handleLogin(event) {
     await loadQueue()
     showToast('登录成功', 'success')
   } catch (error) {
-    showToast(error.message || '登录失败', 'error')
+    showToast(error.message || actionFailedMessage('登录'), 'error')
   } finally {
     setLoadingState(false)
   }
@@ -270,7 +270,7 @@ async function loadQueue(options = {}) {
     state.items = []
     state.total = 0
     state.selectedImageId = null
-    errorMessage = error.message || '加载失败'
+    errorMessage = error.message || UI_MESSAGES.LOAD_FAILED
     showToast(errorMessage, 'error')
   } finally {
     state.loading = false
@@ -300,7 +300,7 @@ async function approveSelected() {
     showToast(`${label} 已通过`, 'success')
     await loadQueue()
   } catch (error) {
-    showToast(error.message || '操作失败', 'error')
+    showToast(error.message || UI_MESSAGES.ACTION_FAILED, 'error')
   } finally {
     state.actionLoading = false
     renderDetail()
@@ -331,7 +331,7 @@ async function rejectSelected() {
     showToast(`${label} 已驳回`, 'success')
     await loadQueue()
   } catch (error) {
-    showToast(error.message || '操作失败', 'error')
+    showToast(error.message || UI_MESSAGES.ACTION_FAILED, 'error')
   } finally {
     state.actionLoading = false
     renderDetail()
@@ -387,7 +387,7 @@ function renderQueue(message) {
   els.nextPageBtn.disabled = state.loading || state.page >= totalPages - 1
 
   if (!state.token) {
-    els.queueMeta.textContent = '请先登录'
+    els.queueMeta.textContent = UI_MESSAGES.LOGIN_REQUIRED
     els.queueList.innerHTML = `
       <div class="empty-queue">
         <h4>等待登录</h4>
@@ -473,7 +473,7 @@ function renderDetail() {
   if (!state.token) {
     els.detailContent.innerHTML = `
       <div class="empty-state">
-        <h4>请先登录</h4>
+        <h4>${UI_MESSAGES.LOGIN_REQUIRED}</h4>
         <p>登录后可查看图片详情</p>
       </div>
     `
@@ -583,7 +583,7 @@ function renderDetail() {
   const image = els.detailContent.querySelector('img')
   if (image) {
     image.addEventListener('error', () => {
-      image.alt = '加载失败'
+      image.alt = '图片加载失败'
       image.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
           <rect width="400" height="300" fill="#1f2937"/>
@@ -609,11 +609,16 @@ async function request(path, options = {}) {
     headers.Authorization = `Bearer ${state.token}`
   }
 
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body === null || options.body === undefined ? undefined : JSON.stringify(options.body)
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body === null || options.body === undefined ? undefined : JSON.stringify(options.body)
+    })
+  } catch (_error) {
+    throw new Error(UI_MESSAGES.NETWORK_ERROR)
+  }
 
   let payload = null
   try {
@@ -627,7 +632,9 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok || !payload?.success) {
-    const message = payload?.message || `请求失败（${response.status}）`
+    const message = payload?.message || (response.status === 401
+      ? UI_MESSAGES.LOGIN_REQUIRED
+      : UI_MESSAGES.REQUEST_FAILED)
     throw new Error(message)
   }
 
@@ -727,4 +734,3 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 }
-
